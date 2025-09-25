@@ -14,6 +14,8 @@ The following attributes / properties are available for each individual trade - 
 |  Attribute | DataType | Description |
 |------------|-------------|-------------|
 | `pair` | string | Pair of this trade. |
+| `base_currency` | string | Base currency of the trading pair. |
+| `stake_currency` | string | Stake/quote currency of the trading pair. |
 | `is_open` | boolean | Is the trade currently open, or has it been concluded. |
 | `open_rate` | float | Rate this trade was entered at (Avg. entry rate in case of trade-adjustments). |
 | `close_rate` | float | Close rate - only set when is_open = False. |
@@ -28,15 +30,27 @@ The following attributes / properties are available for each individual trade - 
 | `realized_profit` | float | Absolute already realized profit (in stake currency) while the trade is still open. |
 | `leverage` | float | Leverage used for this trade - defaults to 1.0 in spot markets. |
 | `enter_tag` | string | Tag provided on entry via the `enter_tag` column in the dataframe. |
+| `exit_reason` | string | Reason why the trade was exited. |
 | `is_short` | boolean | True for short trades, False otherwise. |
 | `orders` | Order[] | List of order objects attached to this trade (includes both filled and cancelled orders). |
 | `date_last_filled_utc` | datetime | Time of the last filled order. |
+| `date_entry_fill_utc` | datetime | Date of the first filled entry order. |
 | `entry_side` | "buy" / "sell" | Order Side the trade was entered. |
 | `exit_side` | "buy" / "sell" | Order Side that will result in a trade exit / position reduction. |
 | `trade_direction` | "long" / "short" | Trade direction in text - long or short. |
 | `nr_of_successful_entries` | int | Number of successful (filled) entry orders. |
 | `nr_of_successful_exits` | int | Number of successful (filled) exit orders. |
 | `has_open_orders` | boolean | Has the trade open orders (excluding stoploss orders). |
+| `open_orders` | Order[] | All open orders for this trade excluding stoploss orders. |
+| `stop_loss` | float | Absolute value of the stop loss. |
+| `stop_loss_pct` | float | Percentage value of the stop loss. |
+| `initial_stop_loss` | float | Absolute value of the initial stop loss. |
+| `initial_stop_loss_pct` | float | Percentage value of the initial stop loss. |
+| `is_stop_loss_trailing` | boolean | True if the stop loss is trailing. |
+| `stoploss_last_update_utc` | datetime | Timestamp of the last stoploss update. |
+| `stoploss_or_liquidation` | float | Returns the more restrictive of stoploss or liquidation price. |
+| `max_rate` | float | Highest price reached during this trade. |
+| `min_rate` | float | Lowest price reached during this trade. |
 
 ## Class methods
 
@@ -120,6 +134,61 @@ Sample return value: ETH/BTC had 5 trades, with a total profit of 1.5% (ratio of
 {"pair": "ETH/BTC", "profit": 0.015, "count": 5}
 ```
 
+### get_enter_tag_performance
+
+Returns performance grouped by enter_tag.
+
+``` python
+from freqtrade.persistence import Trade
+
+# ...
+performance = Trade.get_enter_tag_performance('ETH/USDT')  # or None for all pairs
+```
+
+### get_exit_reason_performance
+
+Returns performance grouped by exit_reason.
+
+``` python
+from freqtrade.persistence import Trade
+
+# ...
+performance = Trade.get_exit_reason_performance('ETH/USDT')  # or None for all pairs
+```
+
+### get_mix_tag_performance
+
+Returns performance grouped by enter_tag + exit_reason combination.
+
+``` python
+from freqtrade.persistence import Trade
+
+# ...
+performance = Trade.get_mix_tag_performance('ETH/USDT')  # or None for all pairs
+```
+
+### get_best_pair
+
+Get the best performing pair with closed trades.
+
+``` python
+from freqtrade.persistence import Trade
+
+# ...
+best_pair = Trade.get_best_pair()
+```
+
+### get_trading_volume
+
+Get total trading volume based on orders.
+
+``` python
+from freqtrade.persistence import Trade
+
+# ...
+volume = Trade.get_trading_volume()
+```
+
 ## Order Object
 
 An `Order` object represents an order on the exchange (or a simulated order in dry-run mode).
@@ -150,5 +219,7 @@ Most properties here can be None as they are dependent on the exchange response.
 | `stake_amount_filled` | float | Filled Stake amount used for this order. *Added in 2024.11.* |
 | `order_date` | datetime | Order creation date **use `order_date_utc` instead** |
 | `order_date_utc` | datetime | Order creation date (in UTC) |
-| `order_fill_date` | datetime |  Order fill date **use `order_fill_utc` instead** |
-| `order_fill_date_utc` | datetime | Order fill date |
+| `order_filled_date` | datetime |  Order fill date **use `order_filled_utc` instead** |
+| `order_filled_utc` | datetime | Order fill date |
+| `order_update_date` | datetime | Last order update date |
+| `funding_fee` | float | Funding fee for this order (futures trading) |
